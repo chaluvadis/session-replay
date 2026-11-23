@@ -1,0 +1,30 @@
+{
+  "name": "@dumb-pipe/sdk",
+  "version": "0.1.0",
+  "description": "Frontend recorder SDK for Dumb Pipe session replay",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@dumb-pipe/types": "workspace:*",
+    "rrweb": "^2.2.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

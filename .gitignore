@@ -1,0 +1,162 @@
+# =============================================================================
+# Dumb Pipe - Root .gitignore
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# 9.1 Node.js and pnpm
+# -----------------------------------------------------------------------------
+node_modules/
+.pnpm-store/
+.pnpm-debug.log*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log
+
+# pnpm temporary files
+.pnpm/
+
+# Package manager temporary files
+*.tgz
+*.npmignore
+
+# Do NOT ignore: pnpm-lock.yaml, pnpm-workspace.yaml, package.json
+
+# -----------------------------------------------------------------------------
+# 9.2 Go
+# -----------------------------------------------------------------------------
+# Compiled binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binaries (*.test)
+*_test
+*.test
+
+# Coverage output
+coverage.out
+*.coverprofile
+coverage.xml
+coverage.html
+
+# Go build artifacts
+/bin/
+/out/
+
+# Temporary Go build files
+vendor/*
+
+# Do NOT ignore: go.mod, go.sum
+
+# -----------------------------------------------------------------------------
+# 9.3 Frontend Build Artifacts
+# -----------------------------------------------------------------------------
+dist/
+build/
+.vite/
+.turbo/
+.cache/
+*.local
+
+# Compiled JS artifacts from tsc in source directories
+packages/*/src/**/*.js
+packages/*/src/**/*.js.map
+packages/*/src/**/*.d.ts
+packages/*/src/**/*.d.ts.map
+
+# -----------------------------------------------------------------------------
+# 9.4 Environment Variables and Secrets
+# -----------------------------------------------------------------------------
+.env
+.env.*
+.env.local
+.env.development.local
+.env.production.local
+.env.test.local
+
+# Do NOT ignore: .env.example
+!.env.example
+
+# Local credentials, private keys, certificates, API tokens
+*.key
+*.pem
+*.crt
+*.secret
+credentials.json
+service-account.json
+
+# Do NOT ignore: .env.example
+
+# -----------------------------------------------------------------------------
+# 9.5 IDE and Editor Files
+# -----------------------------------------------------------------------------
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/launch.json
+!.vscode/tasks.json
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+*.tmp
+*.bak
+
+# -----------------------------------------------------------------------------
+# 9.6 Testing and Coverage
+# -----------------------------------------------------------------------------
+coverage/
+.nyc_output/
+playwright-report/
+blob-report/
+trace/
+test-results/
+*.snap.new
+
+# -----------------------------------------------------------------------------
+# 9.7 Docker and Local Development
+# -----------------------------------------------------------------------------
+# Local Docker volumes
+docker-volumes/
+
+# Local PostgreSQL data directories
+pgdata/
+postgres-data/
+
+# Local MinIO storage directories
+minio-data/
+minio-storage/
+data/minio/
+
+# Local development logs
+logs/
+*.log
+npm.log
+pnpm.log
+
+# Temporary container artifacts
+.container/
+
+# Do NOT ignore: Dockerfile*, docker-compose*.yml, migrations/
+
+# -----------------------------------------------------------------------------
+# OS-generated files
+# -----------------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# -----------------------------------------------------------------------------
+# Misc
+# -----------------------------------------------------------------------------
+*.orig
+*.rej

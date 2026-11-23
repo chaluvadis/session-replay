@@ -1,0 +1,26 @@
+{
+  "name": "@dumb-pipe/types",
+  "version": "0.1.0",
+  "description": "Shared TypeScript interfaces for Dumb Pipe",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

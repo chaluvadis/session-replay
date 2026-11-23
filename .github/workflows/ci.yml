@@ -1,0 +1,142 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  GO_VERSION: "1.27"
+  NODE_VERSION: "26"
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Go mod tidy check
+        run: cd api && go mod tidy && git diff --exit-code go.mod go.sum
+
+      - name: Go fmt check
+        run: cd api && go fmt ./...
+
+      - name: Go vet
+        run: cd api && go vet ./...
+
+      - name: Go build
+        run: cd api && go build ./...
+
+      - name: Go test
+        run: cd api && go test ./...
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install pnpm
+        run: corepack enable
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: TypeScript typecheck
+        run: pnpm run typecheck
+
+      - name: Lint
+        run: pnpm run lint
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Test
+        run: pnpm run test
+
+  integration:
+    needs: [backend, frontend]
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: dumbpipe
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      minio:
+        image: minio/minio:latest
+        env:
+          MINIO_ROOT_USER: minioadmin
+          MINIO_ROOT_PASSWORD: minioadmin
+        ports:
+          - 9000:9000
+        options: >-
+          --health-cmd "curl -f http://localhost:9000/minio/health/live"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install pnpm
+        run: corepack enable
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run migrations
+        run: |
+          cd api
+          go install github.com/jackc/pgx/v5/cmd/sqlc@latest || true
+          psql "postgres://postgres:postgres@localhost:5432/dumbpipe?sslmode=disable" -f migrations/001_initial.sql
+
+      - name: Build backend
+        run: cd api && go build ./...
+
+      - name: Start backend
+        run: |
+          cd api
+          DATABASE_URL="postgres://postgres:postgres@localhost:5432/dumbpipe?sslmode=disable" \
+          MINIO_ENDPOINT="localhost:9000" \
+          MINIO_ACCESS_KEY="minioadmin" \
+          MINIO_SECRET_KEY="minioadmin" \
+          go run ./main.go &
+          sleep 3
+
+      - name: Build frontend
+        run: pnpm run build
+
+      - name: Verify frontend build output
+        run: test -f packages/ui/dist/index.html

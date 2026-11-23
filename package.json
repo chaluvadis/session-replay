@@ -1,0 +1,24 @@
+{
+  "name": "dumb-pipe",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Dumb Pipe session replay platform",
+  "packageManager": "pnpm@12.23.0",
+  "scripts": {
+    "build": "pnpm --filter @dumb-pipe/types build && pnpm --filter @dumb-pipe/sdk build && pnpm --filter @dumb-pipe/ui build",
+    "dev": "pnpm --filter @dumb-pipe/ui dev",
+    "typecheck": "pnpm --filter @dumb-pipe/types typecheck && pnpm --filter @dumb-pipe/sdk typecheck && pnpm --filter @dumb-pipe/ui typecheck",
+    "test": "pnpm --filter @dumb-pipe/ui test",
+    "lint": "pnpm --filter @dumb-pipe/ui lint",
+    "format": "pnpm --filter @dumb-pipe/ui format",
+    "postinstall": "pnpm --filter @dumb-pipe/types exec tsc --noEmit && pnpm --filter @dumb-pipe/sdk exec tsc --noEmit && pnpm --filter @dumb-pipe/ui exec tsc --noEmit"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.8",
+    "globals": "^17.14.0",
+    "typescript-eslint": "^8.73.0"
+  }
+}
