@@ -36,6 +36,11 @@ func main() {
 	}
 	defer postgres.Close()
 
+	// Run migrations.
+	if err := db.Migrate(ctx, postgres.Pool(), "api/migrations/001_initial.sql"); err != nil {
+		log.Fatalf("failed to run migrations: %v", err)
+	}
+
 	// Connect to MinIO.
 	minioClient, err := storage.New(minIOEndpoint, minIOAccessKey, minIOSecretKey, minIOBucket, false)
 	if err != nil {
@@ -45,7 +50,7 @@ func main() {
 
 	// Initialize handlers.
 	healthHandler := handlers.NewHealthHandler()
-	sessionsHandler := handlers.NewSessionsHandler()
+	sessionsHandler := handlers.NewSessionsHandler(postgres.Pool())
 	chunksHandler := handlers.NewChunksHandler()
 
 	// Setup chi router.

@@ -10,20 +10,29 @@ type Session struct {
 	// RunID is an optional identifier for multi-agent support.
 	RunID *string `json:"runId,omitempty"`
 
-	// UserAgent is the browser user agent string, if available.
-	UserAgent *string `json:"userAgent,omitempty"`
+	// Application is the name of the application generating the session.
+	Application string `json:"application"`
 
-	// IP is the client IP address, if available.
-	IP *string `json:"ip,omitempty"`
+	// Environment is the deployment environment (e.g. "production", "staging").
+	Environment string `json:"environment"`
+
+	// URL is the page URL being recorded.
+	URL string `json:"url"`
+
+	// UserID is an optional user identifier associated with the session.
+	UserID *string `json:"userId,omitempty"`
 
 	// Status is the current lifecycle status of the session.
 	Status string `json:"status"`
 
-	// CreatedAt is the timestamp when the session was created.
-	CreatedAt time.Time `json:"createdAt"`
+	// StartedAt is the timestamp when the session was created.
+	StartedAt time.Time `json:"startedAt"`
 
 	// CompletedAt is the timestamp when the session completed, if applicable.
 	CompletedAt *time.Time `json:"completedAt,omitempty"`
+
+	// Metadata is optional free-form metadata stored as JSONB.
+	Metadata map[string]any `json:"metadata,omitempty"`
 }
 
 // Chunk represents a single compressed chunk of session replay data.
