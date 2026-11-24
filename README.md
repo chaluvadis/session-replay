@@ -1,22 +1,68 @@
-# Dumb Pipe
+# DumbPipe: Zero-Infrastructure Session Replay
 
-A lightweight, self-hosted session replay platform.
+**Commercial session replay tools force you to manage ClickHouse and Kafka. DumbPipe uses native browser streaming compression and S3 presigned URLs to give you enterprise-grade replay with zero heavy infrastructure.**
 
-## Architecture
+---
+
+## 🏆 Hackathon Pitch
+
+DumbPipe is a lightweight, self-hosted session replay platform built for speed, simplicity, and zero operational overhead. No ClickHouse. No Kafka. No Redis. Just a tiny Go API, native browser `CompressionStream` API, and S3-compatible object storage.
+
+### Sponsor Shoutouts
+
+**Powered by Supabase:** Using Supabase Storage's S3-compatible API for zero-backend file transfers. Chunks are uploaded directly from the browser to Supabase via presigned URLs—your backend never touches the payload.
+
+**Deployed on Fly.io:** Running our lightweight Go API in the Mumbai region (`bom`) for sub-50ms edge latency. A single shared-CPU VM with 256MB RAM is all you need.
+
+---
+
+## 🏗️ Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                         Browser (End User)                          │
+│  ┌─────────────┐  ┌──────────────────┐  ┌─────────────────────┐   │
+│  │   rrweb     │  │ StreamingCompressor│  │   Fetch API (PUT)   │   │
+│  │  (record)   │  │  (gzip NDJSON)    │  │   presigned URL     │   │
+│  └──────┬──────┘  └────────┬─────────┘  └──────────┬──────────┘   │
+│         │                  │                       │               │
+│         │  10s chunks      │  gzip-compressed      │   S3 PUT      │
+│         ▼                  ▼                       ▼               │
+└─────────────────────────────────────────────────────────────────────┘
+                                     │
+                                     ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                         Go API (chi + pgx)                          │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐    │
+│  │  /api/sessions│→│  PostgreSQL  │  │  /api/chunks (PUT/GET) │→ │ Supabase Storage
+│  │  metadata     │  │   (metadata) │  │   presigned URLs     │    │  (chunks, gzip NDJSON)
+│  └──────────────┘  └──────────────┘  └──────────────────────┘    │
+└─────────────────────────────────────────────────────────────────────┘
+                                     │
+                                     ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                      React Replay UI (rrweb-player)                 │
+│  Fetch presigned GET URLs → DecompressionStream(gzip) → NDJSON      │
+│  → sort by timestamp → rrweb-player                                 │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
-| Backend | Go 1.27, chi router, pgx (PostgreSQL), minio-go (MinIO) |
+| Backend | Go 1.22, chi router, pgx (PostgreSQL), minio-go |
 | Frontend SDK | TypeScript, native CompressionStream API, rrweb |
 | Replay UI | React 19, rrweb-player, Vite |
-| Storage | MinIO (compressed chunks), PostgreSQL (metadata only) |
+| Storage | Supabase Storage (S3-compatible), PostgreSQL (metadata only) |
 | Package Manager | pnpm |
-| Compression | Native gzip via CompressionStream/DecompressionStream |
+| Compression | Native gzip via CompressionStream / DecompressionStream |
 | Chunking | 10-second interval, gzip-compressed NDJSON |
+| Deploy | Fly.io (API) + GitHub Pages (UI) |
 
 ### Core Constraints
 
-- No ClickHouse, no Kafka, no Redis. Intentionally lightweight.
+- **No ClickHouse, no Kafka, no Redis.** Intentionally lightweight.
 - All JSON uses camelCase.
 - Errors use format: `{ "error": { "code": "...", "message": "..." } }`
 - MinIO objects are gzip-compressed NDJSON.
@@ -24,87 +70,74 @@ A lightweight, self-hosted session replay platform.
 - No authentication (prototype).
 - `sessions` table includes `run_id UUID` for future multi-agent support.
 
-## Repository Structure
+---
 
-```
-dumb-pipe/
-├── packages/
-│   ├── types/       # Shared TypeScript interfaces (@dumb-pipe/types)
-│   ├── sdk/         # Frontend recorder SDK (@dumb-pipe/sdk)
-│   └── ui/          # React replay UI (@dumb-pipe/ui)
-├── api/             # Go backend (independent of pnpm workspace)
-│   ├── go.mod
-│   ├── Dockerfile
-│   ├── main.go
-│   ├── internal/
-│   └── migrations/
-├── .github/workflows/ci.yml
-├── docker-compose.yml
-├── .env.example
-├── .gitignore
-├── package.json     # pnpm workspace root
-└── pnpm-workspace.yaml
-```
+## 🚀 Quickstart
 
-## Prerequisites
-
-| Tool | Minimum Version |
-|------|----------------|
-| Go | 1.27 |
-| Node.js | 20 (LTS) |
-| pnpm | 8 |
-
-## Local Development
-
-### 1. Clone and install
+### Option 1: Docker Compose (full stack)
 
 ```bash
+# Clone the repo
 git clone <repository>
 cd dumb-pipe
-```
 
-### 2. Start infrastructure (PostgreSQL + MinIO)
+# Start PostgreSQL + MinIO + API
+docker compose up -d
 
-```bash
-docker compose up -d postgres minio
-```
-
-### 3. Apply database migration
-
-```bash
+# Apply database migration
 psql "postgres://postgres:postgres@localhost:5432/dumbpipe?sslmode=disable" \
   -f api/migrations/001_initial.sql
-```
 
-### 4. Configure environment
-
-```bash
-cp .env.example .env
-# Edit .env as needed
-```
-
-### 5. Install frontend dependencies
-
-```bash
+# Install frontend dependencies
 pnpm install
-```
 
-### 6. Run the backend
-
-```bash
-cd api
-go run ./main.go
-```
-
-### 7. Run the frontend (dev mode)
-
-```bash
+# Run the UI in dev mode
 pnpm dev
 ```
 
-The UI will be available at `http://localhost:5173` and proxies `/api` to `http://localhost:8080`.
+The UI will be available at `http://localhost:5173` and the API at `http://localhost:8080`.
 
-## API Contract
+### Option 2: Manual (backend only)
+
+```bash
+cd api
+go run ./cmd/server/main.go
+```
+
+Then in another terminal:
+
+```bash
+pnpm install
+pnpm dev
+```
+
+---
+
+## 📦 Usage
+
+### Recording (Frontend SDK)
+
+```ts
+import DumbPipeSDK from "@dumb-pipe/sdk";
+
+const sdk = new DumbPipeSDK({ baseUrl: "http://localhost:8080" });
+
+await sdk.start(); // starts rrweb recording, 10s chunked uploads
+
+// ... user interacts with the app ...
+
+await sdk.complete(); // flush remaining events, mark session complete
+```
+
+### Replay UI
+
+1. Open `http://localhost:5173`
+2. Browse recorded sessions in the session list
+3. Click any session to replay it with full rrweb-player controls (play, pause, seek, timeline)
+
+---
+
+## 📡 API Contract
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
@@ -120,7 +153,9 @@ The UI will be available at `http://localhost:5173` and proxies `/api` to `http:
 { "error": { "code": "...", "message": "..." } }
 ```
 
-## Commands
+---
+
+## 🛠️ Commands
 
 ### Root (pnpm workspace)
 
@@ -131,7 +166,6 @@ The UI will be available at `http://localhost:5173` and proxies `/api` to `http:
 | `pnpm run dev` | Start the UI dev server |
 | `pnpm run typecheck` | TypeScript typecheck all packages |
 | `pnpm run lint` | ESLint the UI package |
-| `pnpm run format` | Prettier format the UI package |
 | `pnpm run test` | Run UI tests (vitest) |
 
 ### Backend (Go)
@@ -151,34 +185,34 @@ import DumbPipeSDK from "@dumb-pipe/sdk";
 
 const sdk = new DumbPipeSDK({ baseUrl: "http://localhost:8080" });
 
-await sdk.start(); // starts rrweb recording, 10s chunked uploads
+await sdk.start();
 
-// ... user interacts with the app ...
+// ... user interacts ...
 
-await sdk.complete(); // flush remaining events, mark session complete
+await sdk.complete();
 ```
 
-## Docker
+---
 
-### Backend only
+## ☁️ Deployment
+
+### API (Fly.io)
 
 ```bash
-docker build -t dumb-pipe-api -f api/Dockerfile .
+flyctl deploy
 ```
 
-### Full stack (PostgreSQL + MinIO + API + UI)
+Configured in `api/fly.toml`:
+- Region: `bom` (Mumbai)
+- VM: shared-cpu-1x, 256MB RAM
+- Internal port: 8080
 
-```bash
-docker compose up --build
-```
+### UI (GitHub Pages)
 
-## CI/CD
+Built and deployed automatically via GitHub Actions on push to `main`. Configured in `.github/workflows/deploy.yml`.
 
-GitHub Actions workflow at `.github/workflows/ci.yml` runs on every push and PR:
-- Backend: go mod tidy check, go fmt, go vet, go build, go test
-- Frontend: pnpm install, typecheck, lint, build, test
-- Integration: starts backend + infrastructure, verifies build output
+---
 
-## License
+## 📄 License
 
 MIT
