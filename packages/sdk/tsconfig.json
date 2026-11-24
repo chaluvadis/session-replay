@@ -16,7 +16,6 @@
     "noUnusedParameters": false,
     "jsx": "react-jsx",
     "allowJs": false,
-    "baseUrl": ".",
     "paths": {
       "@dumb-pipe/types": ["../types/src/index.ts"]
     }
