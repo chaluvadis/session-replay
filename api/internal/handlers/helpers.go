@@ -1,11 +1,23 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
+	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/jackc/pgx/v5"
+
 	"dumb-pipe/api/internal/models"
 )
+
+// DB is the minimal database interface used by handlers.
+// *pgxpool.Pool satisfies this interface.
+type DB interface {
+	QueryRow(ctx context.Context, query string, args ...any) pgx.Row
+	Query(ctx context.Context, query string, args ...any) (pgx.Rows, error)
+	Exec(ctx context.Context, query string, args ...any) (pgconn.CommandTag, error)
+}
 
 // writeJSON writes a JSON response with the given status code and payload.
 func writeJSON(w http.ResponseWriter, status int, payload any) error {

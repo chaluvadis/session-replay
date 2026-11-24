@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -8,10 +9,13 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
-
-	"dumb-pipe/api/internal/storage"
 )
+
+// Presigner generates presigned URLs for object storage operations.
+type Presigner interface {
+	PresignedPutURL(ctx context.Context, objectKey string, expiry time.Duration) (string, error)
+	PresignedGetURL(ctx context.Context, objectKey string, expiry time.Duration) (string, error)
+}
 
 // CreateChunkRequest represents the request body for creating a chunk upload URL.
 type CreateChunkRequest struct {
@@ -29,11 +33,11 @@ type CreateChunkResponse struct {
 
 // SessionChunk represents a single session chunk for playback.
 type SessionChunk struct {
-	ChunkIndex  int       `json:"chunkIndex"`
-	ObjectKey   string    `json:"objectKey"`
-	FileSize    int64     `json:"fileSize"`
-	PresignedUrl string   `json:"presignedUrl"`
-	ExpiresAt   time.Time `json:"expiresAt"`
+	ChunkIndex   int       `json:"chunkIndex"`
+	ObjectKey    string    `json:"objectKey"`
+	FileSize     int64     `json:"fileSize"`
+	PresignedUrl string    `json:"presignedUrl"`
+	ExpiresAt    time.Time `json:"expiresAt"`
 }
 
 // GetSessionChunksResponse represents the response body for listing session chunks.
@@ -45,13 +49,13 @@ type GetSessionChunksResponse struct {
 
 // ChunksHandler handles chunk-related requests.
 type ChunksHandler struct {
-	db     *pgxpool.Pool
-	minio  *storage.MinIO
+	db       DB
+	presigner Presigner
 }
 
 // NewChunksHandler creates a new ChunksHandler.
-func NewChunksHandler(db *pgxpool.Pool, minio *storage.MinIO) *ChunksHandler {
-	return &ChunksHandler{db: db, minio: minio}
+func NewChunksHandler(db DB, presigner Presigner) *ChunksHandler {
+	return &ChunksHandler{db: db, presigner: presigner}
 }
 
 // CreateChunk handles POST /api/chunks.
@@ -96,7 +100,7 @@ func (h *ChunksHandler) CreateChunk(w http.ResponseWriter, r *http.Request) {
 	// Generate presigned PUT URL (10 minute expiry)
 	expiry := 10 * time.Minute
 	expiresAt := time.Now().UTC().Add(expiry)
-	uploadUrl, err := h.minio.PresignedPutURL(r.Context(), objectKey, expiry)
+	uploadUrl, err := h.presigner.PresignedPutURL(r.Context(), objectKey, expiry)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "storage_error", "failed to generate presigned upload URL")
 		return
@@ -171,7 +175,7 @@ func (h *ChunksHandler) GetChunk(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Generate presigned GET URL; skip chunk on failure
-		presignedUrl, err := h.minio.PresignedGetURL(r.Context(), objectKey, expiry)
+		presignedUrl, err := h.presigner.PresignedGetURL(r.Context(), objectKey, expiry)
 		if err != nil {
 			log.Printf("failed to generate presigned GET URL for chunk %s/%d: %v", sessionID, chunkIndex, err)
 			continue

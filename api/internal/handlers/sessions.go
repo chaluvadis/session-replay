@@ -11,7 +11,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/jackc/pgx/v5/pgxpool"
 
 	"dumb-pipe/api/internal/models"
 )
@@ -70,11 +69,11 @@ type ListSessionsResponse struct {
 
 // SessionsHandler handles session-related requests.
 type SessionsHandler struct {
-	db *pgxpool.Pool
+	db DB
 }
 
 // NewSessionsHandler creates a new SessionsHandler.
-func NewSessionsHandler(db *pgxpool.Pool) *SessionsHandler {
+func NewSessionsHandler(db DB) *SessionsHandler {
 	return &SessionsHandler{db: db}
 }
 
