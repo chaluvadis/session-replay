@@ -129,3 +129,9 @@ export interface ApiError {
     details?: unknown;
   };
 }
+
+/** Alias for CreateChunkResponse, used by the SDK when requesting presigned URLs. */
+export type PresignedUrlResponse = CreateChunkResponse;
+
+/** Alias for ApiError, used by the SDK client for error parsing. */
+export type ErrorResponse = ApiError;

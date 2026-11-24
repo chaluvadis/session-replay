@@ -13,8 +13,10 @@ export type {
   CreateSessionResponse,
   CreateChunkRequest,
   CreateChunkResponse,
+  PresignedUrlResponse,
   SessionSummary,
   SessionChunk,
   GetSessionChunksResponse,
   ApiError,
+  ErrorResponse,
 } from "./api";

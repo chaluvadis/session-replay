@@ -1,12 +1,15 @@
-import type { RrwebEvent, Session } from "@dumb-pipe/types";
 import { record } from "rrweb";
 import { eventsToNdjsonBytes, gzipUint8Array } from "./compress";
 import { ApiClient } from "./client";
+
+type RrwebEvent = Record<string, unknown>;
 
 export interface DumbPipeSDKOptions {
   baseUrl?: string;
   flushIntervalMs?: number;
   sessionId?: string;
+  application?: string;
+  environment?: string;
 }
 
 export interface StartResult {
@@ -43,8 +46,11 @@ export class DumbPipeSDK {
     let sessionId = options?.sessionId ?? this.sessionId;
 
     if (!sessionId) {
-      const res = await this.api.createSession();
-      sessionId = res.session.id;
+      const res = await this.api.createSession({
+        application: "web",
+        environment: "development",
+      });
+      sessionId = res.sessionId;
     }
 
     this.sessionId = sessionId;
@@ -86,7 +92,7 @@ export class DumbPipeSDK {
       sizeBytes: compressed.byteLength,
     });
 
-    await fetch(presigned.url, {
+    await fetch(presigned.uploadUrl, {
       method: "PUT",
       body: new Uint8Array(compressed),
       headers: { "Content-Type": "application/gzip" },

@@ -59,16 +59,24 @@ export class ApiClient {
   }
 
   async createSession(opts?: {
-    userAgent?: string;
-    ip?: string;
+    sessionId?: string;
+    application?: string;
+    environment?: string;
+    url?: string;
+    userId?: string;
     runId?: string;
+    metadata?: Record<string, unknown>;
   }): Promise<CreateSessionResponse> {
     return requestJSON(this.url("/api/sessions"), {
       method: "POST",
       body: JSON.stringify({
-        user_agent: opts?.userAgent ?? null,
-        ip: opts?.ip ?? null,
-        run_id: opts?.runId ?? null,
+        sessionId: opts?.sessionId ?? crypto.randomUUID(),
+        application: opts?.application ?? "unknown",
+        environment: opts?.environment ?? "development",
+        url: opts?.url ?? typeof location !== "undefined" ? location.href : "",
+        userId: opts?.userId ?? null,
+        runId: opts?.runId ?? null,
+        metadata: opts?.metadata ?? {},
       }),
     });
   }
@@ -82,10 +90,9 @@ export class ApiClient {
     return requestJSON(this.url("/api/chunks"), {
       method: "POST",
       body: JSON.stringify({
-        session_id: opts.sessionId,
-        chunk_index: opts.chunkIndex,
-        object_key: opts.objectKey ?? "",
-        size_bytes: opts.sizeBytes ?? 0,
+        sessionId: opts.sessionId,
+        chunkIndex: opts.chunkIndex,
+        fileSize: opts.sizeBytes ?? 0,
       }),
     });
   }
@@ -93,7 +100,6 @@ export class ApiClient {
   async completeSession(sessionId: string): Promise<any> {
     return requestJSON(this.url(`/api/sessions/${sessionId}/complete`), {
       method: "POST",
-      body: JSON.stringify({ status: "completed" }),
     });
   }
 

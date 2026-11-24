@@ -13,6 +13,7 @@ import { Player } from "rrweb-player";
 import "rrweb-player/dist/style.css";
 import type { eventWithTime } from "@rrweb/types";
 import { getSessionChunks } from "../api";
+import { loadSessionEvents } from "../utils/chunkLoader";
 
 export default function ReplayPlayer() {
   const { id: sessionIdParam } = useParams<{ id: string }>()

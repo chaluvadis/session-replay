@@ -22,7 +22,7 @@ func main() {
 	defer stop()
 
 	// Load configuration from environment variables.
-	databaseURL := getEnv("DATABASE_URL", "postgres://postgres:postgres@localhost:5432/session-replay?sslmode=disable")
+	databaseURL := getEnv("DATABASE_URL", "postgres://postgres:postgres@localhost:5432/dumbpipe?sslmode=disable")
 	minIOEndpoint := getEnv("MINIO_ENDPOINT", "localhost:9000")
 	minIOAccessKey := getEnv("MINIO_ACCESS_KEY", "minioadmin")
 	minIOSecretKey := getEnv("MINIO_SECRET_KEY", "minioadmin")

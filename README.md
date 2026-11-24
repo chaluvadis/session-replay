@@ -1,50 +1,23 @@
-# DumbPipe: Zero-Infrastructure Session Replay
+# DumbPipe
 
-**Commercial session replay tools force you to manage ClickHouse and Kafka. DumbPipe uses native browser streaming compression and S3 presigned URLs to give you enterprise-grade replay with zero heavy infrastructure.**
+A lightweight, self-hosted session replay platform.
 
----
+DumbPipe captures frontend user sessions using rrweb, compresses them with the native browser `CompressionStream` API, and uploads them in 10-second gzip chunks to S3-compatible object storage via presigned URLs. The Go backend stores only session metadata in PostgreSQL—never the replay payload itself.
 
-## 🏆 Hackathon Pitch
-
-DumbPipe is a lightweight, self-hosted session replay platform built for speed, simplicity, and zero operational overhead. No ClickHouse. No Kafka. No Redis. Just a tiny Go API, native browser `CompressionStream` API, and S3-compatible object storage.
-
-### Sponsor Shoutouts
-
-**Powered by Supabase:** Using Supabase Storage's S3-compatible API for zero-backend file transfers. Chunks are uploaded directly from the browser to Supabase via presigned URLs—your backend never touches the payload.
-
-**Deployed on Fly.io:** Running our lightweight Go API in the Mumbai region (`bom`) for sub-50ms edge latency. A single shared-CPU VM with 256MB RAM is all you need.
-
----
-
-## 🏗️ Architecture
+## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                         Browser (End User)                          │
-│  ┌─────────────┐  ┌──────────────────┐  ┌─────────────────────┐   │
-│  │   rrweb     │  │ StreamingCompressor│  │   Fetch API (PUT)   │   │
-│  │  (record)   │  │  (gzip NDJSON)    │  │   presigned URL     │   │
-│  └──────┬──────┘  └────────┬─────────┘  └──────────┬──────────┘   │
-│         │                  │                       │               │
-│         │  10s chunks      │  gzip-compressed      │   S3 PUT      │
-│         ▼                  ▼                       ▼               │
-└─────────────────────────────────────────────────────────────────────┘
-                                     │
-                                     ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│                         Go API (chi + pgx)                          │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐    │
-│  │  /api/sessions│→│  PostgreSQL  │  │  /api/chunks (PUT/GET) │→ │ Supabase Storage
-│  │  metadata     │  │   (metadata) │  │   presigned URLs     │    │  (chunks, gzip NDJSON)
-│  └──────────────┘  └──────────────┘  └──────────────────────┘    │
-└─────────────────────────────────────────────────────────────────────┘
-                                     │
-                                     ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│                      React Replay UI (rrweb-player)                 │
-│  Fetch presigned GET URLs → DecompressionStream(gzip) → NDJSON      │
-│  → sort by timestamp → rrweb-player                                 │
-└─────────────────────────────────────────────────────────────────────┘
+Browser SDK              Go API (chi + pgx)          Object Storage
+─────────────            ─────────────────           ──────────────
+rrweb.record()           POST /api/sessions          MinIO buckets
+CompressionStream (gzip)  POST /api/chunks            {session_id}/
+10s chunks, NDJSON        GET /api/sessions           {chunk_index:06d}.gz
+                         GET /api/sessions/:id/chunks
+                         presigned PUT/GET URLs
+
+Browser (replay UI)       ←──  GET presigned URLs
+──────────────            DecompressionStream (gzip)
+rrweb-player              NDJSON parse → timestamp sort
 ```
 
 ### Tech Stack
@@ -54,15 +27,15 @@ DumbPipe is a lightweight, self-hosted session replay platform built for speed, 
 | Backend | Go 1.22, chi router, pgx (PostgreSQL), minio-go |
 | Frontend SDK | TypeScript, native CompressionStream API, rrweb |
 | Replay UI | React 19, rrweb-player, Vite |
-| Storage | Supabase Storage (S3-compatible), PostgreSQL (metadata only) |
+| Storage | MinIO (compressed chunks), PostgreSQL (metadata only) |
 | Package Manager | pnpm |
 | Compression | Native gzip via CompressionStream / DecompressionStream |
 | Chunking | 10-second interval, gzip-compressed NDJSON |
-| Deploy | Fly.io (API) + GitHub Pages (UI) |
+| Deploy | Docker, Fly.io, GitHub Pages |
 
 ### Core Constraints
 
-- **No ClickHouse, no Kafka, no Redis.** Intentionally lightweight.
+- No ClickHouse, no Kafka, no Redis. Intentionally lightweight.
 - All JSON uses camelCase.
 - Errors use format: `{ "error": { "code": "...", "message": "..." } }`
 - MinIO objects are gzip-compressed NDJSON.
@@ -70,74 +43,89 @@ DumbPipe is a lightweight, self-hosted session replay platform built for speed, 
 - No authentication (prototype).
 - `sessions` table includes `run_id UUID` for future multi-agent support.
 
----
+## Repository Structure
 
-## 🚀 Quickstart
-
-### Option 1: Docker Compose (full stack)
-
-```bash
-# Clone the repo
-git clone <repository>
-cd dumb-pipe
-
-# Start PostgreSQL + MinIO + API
-docker compose up -d
-
-# Apply database migration
-psql "postgres://postgres:postgres@localhost:5432/dumbpipe?sslmode=disable" \
-  -f api/migrations/001_initial.sql
-
-# Install frontend dependencies
-pnpm install
-
-# Run the UI in dev mode
-pnpm dev
+```
+dumb-pipe/
+├── packages/
+│   ├── types/       # Shared TypeScript interfaces (@dumb-pipe/types)
+│   ├── sdk/         # Frontend recorder SDK (@dumb-pipe/sdk)
+│   └── ui/          # React replay UI (@dumb-pipe/ui)
+├── api/             # Go backend (independent of pnpm workspace)
+│   ├── cmd/server/main.go
+│   ├── internal/
+│   ├── migrations/
+│   ├── Dockerfile
+│   └── go.mod
+├── .github/workflows/ci.yml
+├── .github/workflows/deploy.yml
+├── docker-compose.yml
+├── .env.example
+├── .gitignore
+├── package.json     # pnpm workspace root
+└── pnpm-workspace.yaml
 ```
 
-The UI will be available at `http://localhost:5173` and the API at `http://localhost:8080`.
+## Prerequisites
 
-### Option 2: Manual (backend only)
+| Tool | Minimum Version |
+|------|----------------|
+| Go | 1.22 |
+| Node.js | 20 (LTS) |
+| pnpm | 8 |
+| Docker | 20.10+ |
+
+## Local Development
+
+### 1. Clone and install
+
+```bash
+git clone <repository>
+cd dumb-pipe
+```
+
+### 2. Start infrastructure (PostgreSQL + MinIO)
+
+```bash
+docker compose up -d postgres minio
+```
+
+### 3. Apply database migration
+
+```bash
+psql "postgres://postgres:postgres@localhost:5432/dumbpipe?sslmode=disable" \
+  -f api/migrations/001_initial.sql
+```
+
+### 4. Configure environment
+
+```bash
+cp .env.example .env
+# Edit .env as needed
+```
+
+### 5. Install frontend dependencies
+
+```bash
+pnpm install
+```
+
+### 6. Run the backend
 
 ```bash
 cd api
 go run ./cmd/server/main.go
 ```
 
-Then in another terminal:
+### 7. Run the frontend (dev mode)
 
 ```bash
-pnpm install
 pnpm dev
 ```
 
----
+The UI will be available at `http://localhost:5173` and the API at `http://localhost:8080`.
 
-## 📦 Usage
-
-### Recording (Frontend SDK)
-
-```ts
-import DumbPipeSDK from "@dumb-pipe/sdk";
-
-const sdk = new DumbPipeSDK({ baseUrl: "http://localhost:8080" });
-
-await sdk.start(); // starts rrweb recording, 10s chunked uploads
-
-// ... user interacts with the app ...
-
-await sdk.complete(); // flush remaining events, mark session complete
-```
-
-### Replay UI
-
-1. Open `http://localhost:5173`
-2. Browse recorded sessions in the session list
-3. Click any session to replay it with full rrweb-player controls (play, pause, seek, timeline)
-
----
-
-## 📡 API Contract
+## API Contract
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
@@ -153,9 +141,7 @@ await sdk.complete(); // flush remaining events, mark session complete
 { "error": { "code": "...", "message": "..." } }
 ```
 
----
-
-## 🛠️ Commands
+## Commands
 
 ### Root (pnpm workspace)
 
@@ -185,16 +171,33 @@ import DumbPipeSDK from "@dumb-pipe/sdk";
 
 const sdk = new DumbPipeSDK({ baseUrl: "http://localhost:8080" });
 
-await sdk.start();
+await sdk.start(); // starts rrweb recording, 10s chunked uploads
 
-// ... user interacts ...
+// ... user interacts with the app ...
 
-await sdk.complete();
+await sdk.complete(); // flush remaining events, mark session complete
 ```
 
----
+## Docker
 
-## ☁️ Deployment
+### Backend only
+
+```bash
+docker build -t dumb-pipe-api -f api/Dockerfile .
+```
+
+### Full stack (PostgreSQL + MinIO + API)
+
+```bash
+docker compose up --build
+```
+
+## CI/CD
+
+- `.github/workflows/ci.yml` — runs on every push and PR: backend (go mod tidy, fmt, vet, build, test), frontend (typecheck, lint, build, test), and integration (starts backend + infrastructure, verifies build output).
+- `.github/workflows/deploy.yml` — deploys the UI to GitHub Pages on push to `main`.
+
+## Deployment
 
 ### API (Fly.io)
 
@@ -207,12 +210,16 @@ Configured in `api/fly.toml`:
 - VM: shared-cpu-1x, 256MB RAM
 - Internal port: 8080
 
+Set `MINIO_ACCESS_KEY` and `MINIO_SECRET_KEY` as Fly secrets:
+
+```bash
+fly secrets set MINIO_ACCESS_KEY=<key> MINIO_SECRET_KEY=<secret>
+```
+
 ### UI (GitHub Pages)
 
 Built and deployed automatically via GitHub Actions on push to `main`. Configured in `.github/workflows/deploy.yml`.
 
----
-
-## 📄 License
+## License
 
 MIT

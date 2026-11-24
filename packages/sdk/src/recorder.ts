@@ -363,6 +363,8 @@ export class SessionRecorder {
   };
 
   private readonly onBeforeUnload = (): void => {
+    // Best-effort flush on page unload. Cannot await async work here;
+    // data may be lost if the tab closes before the timer fires.
     void this.flushAndUpload();
   };
 }
