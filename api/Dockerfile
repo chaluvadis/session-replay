@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM golang:1.27-alpine AS builder
+FROM golang:1.22-alpine AS builder
 
 WORKDIR /src
 
@@ -15,7 +15,7 @@ COPY api/ ./
 RUN CGO_ENABLED=0 go build -o /bin/dumb-pipe-api ./main.go
 
 # --- Runtime ---
-FROM alpine:3.21
+FROM alpine:latest
 
 WORKDIR /app
 

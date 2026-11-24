@@ -1,0 +1,32 @@
+app = "dumbpipe-api"
+primary_region = "bom"
+
+[build]
+  dockerfile = "api/Dockerfile"
+
+[env]
+  DATABASE_URL = "postgres://postgres:postgres@postgres:5432/dumbpipe?sslmode=disable"
+  MINIO_ENDPOINT = "minio:9000"
+  MINIO_ACCESS_KEY = "minioadmin"
+  MINIO_SECRET_KEY = "minioadmin"
+  MINIO_BUCKET = "dumbpipe-chunks"
+  MINIO_USE_SSL = "false"
+  SERVER_ADDR = ":8080"
+
+[[services]]
+  internal_port = 8080
+  protocol = "tcp"
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+
+  [[services.checks]]
+    type = "tcp"
+    interval = "10s"
+    timeout = "2s"
+    restart_limit = 0
+
+[vm]
+  size = "shared-cpu-1x"
+  memory = "256mb"
