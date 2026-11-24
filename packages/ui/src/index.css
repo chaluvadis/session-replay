@@ -1,131 +1,72 @@
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  background: #0f172a;
-  color: #f8fafc;
+@import "tailwindcss";
+
+@theme {
+  --color-dark-bg: #0f172a;
+  --color-dark-surface: #1e293b;
+  --color-dark-border: #334155;
+  --color-dark-text: #f8fafc;
+  --color-dark-muted: #94a3b8;
+
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: "SF Mono", Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
-#root {
-  min-height: 100vh;
-}
-
-a {
-  color: #38bdf8;
-  text-decoration: none;
-}
-
-button {
-  cursor: pointer;
-}
-
-.app {
-  display: flex;
-  flex-direction: column;
-}
-
-.navbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1rem 1.5rem;
-  background: #1e293b;
-  border-bottom: 1px solid #334155;
-}
-
-.navbar a {
-  color: #38bdf8;
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.navbar a:hover {
-  text-decoration: underline;
-}
-
-.spacer {
-  flex: 1;
-}
-
-.container {
-  padding: 1.5rem;
-  max-width: 1100px;
-  margin: 0 auto;
-}
-
-.page h1 {
-  font-size: 1.5rem;
-  margin-bottom: 1rem;
-}
-
-.loading, .error, .empty {
-  padding: 2rem;
-  color: #94a3b8;
-}
-
-.error {
-  color: #f87171;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: #1e293b;
-  border: 1px solid #334155;
-}
-
-th, td {
-  padding: 0.75rem 1rem;
-  text-align: left;
-  border-bottom: 1px solid #334155;
-}
-
-th {
-  background: #0f172a;
-  font-weight: 600;
-  color: #94a3b8;
-  font-size: 0.875rem;
-  text-transform: uppercase;
-}
-
-tr:hover {
-  background: #334155;
-}
-
-tr.clickable {
-  cursor: pointer;
-}
-
-.badge {
-  display: inline-block;
-  padding: 0.15rem 0.5rem;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.badge.active {
-  background: #166534;
-  color: #bbf7d0;
-}
-
-.badge.completed {
-  background: #1d4ed8;
-  color: #bfdbfe;
-}
-
-.replay-page .player-container {
-  border: 1px solid #334155;
-  border-radius: 0.5rem;
-  background: #0b0f19;
-  min-height: 600px;
-  width: 100%;
-}
-
-@media (max-width: 640px) {
-  .container {
-    padding: 1rem;
+@layer base {
+  html {
+    scroll-behavior: smooth;
   }
-  table {
-    font-size: 0.875rem;
+
+  body {
+    background-color: var(--color-dark-bg);
+    color: var(--color-dark-text);
+    margin: 0;
+    font-family: var(--font-sans);
+  }
+
+  #root {
+    min-height: 100vh;
+  }
+
+  a {
+    color: #38bdf8;
+    text-decoration: none;
+  }
+
+  button {
+    cursor: pointer;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-md text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .badge-status {
+    @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .badge-completed {
+    @apply bg-blue-900/20 text-blue-400 border border-blue-500/30;
+  }
+
+  .badge-active {
+    @apply bg-emerald-900/20 text-emerald-400 border border-emerald-500/30;
+  }
+
+  .badge-failed {
+    @apply bg-rose-900/20 text-rose-400 border border-rose-500/30;
+  }
+
+  .table-cell {
+    @apply px-4 py-3 text-sm border-b border-dark-border;
+  }
+
+  .table-header {
+    @apply px-4 py-3 text-xs font-semibold text-dark-muted uppercase tracking-wider border-b border-dark-border;
+  }
+
+  .tr-clickable {
+    @apply cursor-pointer hover:bg-dark-surface/50 transition-colors;
   }
 }
