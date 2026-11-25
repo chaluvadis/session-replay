@@ -96,20 +96,6 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
-      minio:
-        image: minio:latest
-        env:
-          MINIO_ROOT_USER: ${{ secrets.MINIO_CI_USER }}
-          MINIO_ROOT_PASSWORD: ${{ secrets.MINIO_CI_PASSWORD }}
-        ports:
-          - 9000:9000
-        options: >-
-          --health-cmd "curl -f http://localhost:9000/minio/health/live"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        command: server /data
-
     steps:
       - uses: actions/checkout@v4
 
@@ -130,6 +116,23 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Start MinIO (binary, not Docker)
+        run: |
+          wget -q https://dl.min.io/server/minio/release/linux-amd64/minio
+          chmod +x minio
+          MINIO_ROOT_USER=${{ secrets.MINIO_CI_USER }} \
+          MINIO_ROOT_PASSWORD=${{ secrets.MINIO_CI_PASSWORD }} \
+          ./minio server /data --console-address ":9001" &
+          MINIO_PID=$!
+          echo "MINIO_PID=$MINIO_PID" >> $GITHUB_ENV
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:9000/minio/health/live > /dev/null 2>&1; then
+              echo "MinIO is ready"
+              break
+            fi
+            sleep 1
+          done
 
       - name: Run migrations
         env:
@@ -158,6 +161,7 @@ jobs:
           MINIO_ACCESS_KEY="${MINIO_CI_USER}" \
           MINIO_SECRET_KEY="${MINIO_CI_PASSWORD}" \
           MINIO_BUCKET="${MINIO_CI_BUCKET}" \
+          MINIO_USE_SSL="false" \
           ./replay-api &
           
           # Wait for backend to be healthy
