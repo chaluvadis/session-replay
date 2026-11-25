@@ -5,7 +5,7 @@ primary_region = "bom"
 [build]
   # If fly.toml is at the ROOT of your repo, use "api/Dockerfile"
   # If fly.toml is INSIDE the api/ folder, use "Dockerfile"
-  dockerfile = "Dockerfile" 
+  dockerfile = "api/Dockerfile" 
 
 [env]
   PORT = "8080"
