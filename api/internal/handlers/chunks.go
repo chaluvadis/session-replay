@@ -80,6 +80,11 @@ func (h *ChunksHandler) CreateChunk(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if h.presigner == nil {
+		writeError(w, http.StatusServiceUnavailable, "storage_unavailable", "object storage not available")
+		return
+	}
+
 	// Validate session exists
 	var exists bool
 	err := h.db.QueryRow(r.Context(), `
@@ -148,6 +153,11 @@ func (h *ChunksHandler) GetChunk(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Query chunks ordered by chunk_index
+	if h.presigner == nil {
+		writeError(w, http.StatusServiceUnavailable, "storage_unavailable", "object storage not available")
+		return
+	}
+
 	rows, err := h.db.Query(r.Context(), `
 		SELECT chunk_index, object_key, file_size
 		FROM session_chunks

@@ -41,12 +41,12 @@ func main() {
 		log.Fatalf("failed to run migrations: %v", err)
 	}
 
-	// Connect to MinIO.
+	// Connect to MinIO (non-fatal — session registration works without it).
 	minioClient, err := storage.New(minIOEndpoint, minIOAccessKey, minIOSecretKey, minIOBucket, false)
 	if err != nil {
-		log.Fatalf("failed to connect to minio: %v", err)
+		log.Printf("warning: failed to connect to minio: %v", err)
+		minioClient = nil
 	}
-	_ = minioClient
 
 	// Initialize handlers.
 	healthHandler := handlers.NewHealthHandler()
