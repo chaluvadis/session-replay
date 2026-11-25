@@ -51,7 +51,12 @@ func main() {
 	// Initialize handlers.
 	healthHandler := handlers.NewHealthHandler()
 	sessionsHandler := handlers.NewSessionsHandler(postgres.Pool())
-	chunksHandler := handlers.NewChunksHandler(postgres.Pool(), minioClient)
+
+	var presigner handlers.Presigner
+	if minioClient != nil {
+		presigner = minioClient
+	}
+	chunksHandler := handlers.NewChunksHandler(postgres.Pool(), presigner)
 
 	// Setup chi router.
 	r := chi.NewRouter()
