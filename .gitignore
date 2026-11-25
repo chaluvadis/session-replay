@@ -67,6 +67,9 @@ packages/*/src/**/*.js.map
 packages/*/src/**/*.d.ts
 packages/*/src/**/*.d.ts.map
 
+# Exception: CSS module type declarations needed for TS 7 side-effect imports
+!packages/*/src/css.d.ts
+
 # -----------------------------------------------------------------------------
 # 9.4 Environment Variables and Secrets
 # -----------------------------------------------------------------------------
