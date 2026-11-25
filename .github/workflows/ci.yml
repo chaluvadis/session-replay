@@ -130,12 +130,12 @@ jobs:
 
       - name: Build and start backend
         env:
-          POSTGRES_CI_USER: ${{ secrets.POSTGRES_CI_USER }}
-          POSTGRES_CI_PASSWORD: ${{ secrets.POSTGRES_CI_PASSWORD }}
-          POSTGRES_CI_DB: ${{ secrets.POSTGRES_CI_DB }}
-          MINIO_CI_USER: ${{ secrets.MINIO_CI_USER }}
-          MINIO_CI_PASSWORD: ${{ secrets.MINIO_CI_PASSWORD }}
-          MINIO_CI_BUCKET: ${{ secrets.MINIO_CI_BUCKET }}
+          POSTGRES_CI_USER: ${{ secrets.POSTGRES_CI_USER || 'postgres' }}
+          POSTGRES_CI_PASSWORD: ${{ secrets.POSTGRES_CI_PASSWORD || 'postgres' }}
+          POSTGRES_CI_DB: ${{ secrets.POSTGRES_CI_DB || 'dumbpipe' }}
+          MINIO_CI_USER: ${{ secrets.MINIO_CI_USER || 'minioadmin' }}
+          MINIO_CI_PASSWORD: ${{ secrets.MINIO_CI_PASSWORD || 'minioadmin' }}
+          MINIO_CI_BUCKET: ${{ secrets.MINIO_CI_BUCKET || 'dumbpipe-chunks' }}
         run: |
           cd api
           go build -o ../replay-api ./cmd/server
@@ -146,13 +146,18 @@ jobs:
           MINIO_SECRET_KEY="${MINIO_CI_PASSWORD}" \
           MINIO_BUCKET="${MINIO_CI_BUCKET}" \
           MINIO_USE_SSL="false" \
-          ./replay-api &
+          ./replay-api > /tmp/backend.log 2>&1 &
 
           # Wait for backend to be healthy
-          for i in {1..30}; do
-            if curl -sf http://localhost:8080/api/health; then
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:8080/api/health > /dev/null 2>&1; then
               echo "Backend is ready"
               break
+            fi
+            if [ $i -eq 30 ]; then
+              echo "Backend failed to start. Logs:"
+              cat /tmp/backend.log
+              exit 1
             fi
             sleep 1
           done
