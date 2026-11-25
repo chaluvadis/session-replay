@@ -26,9 +26,9 @@ type CreateChunkRequest struct {
 
 // CreateChunkResponse represents the response body for creating a chunk.
 type CreateChunkResponse struct {
-	UploadUrl  string    `json:"uploadUrl"`
-	ObjectKey  string    `json:"objectKey"`
-	ExpiresAt  time.Time `json:"expiresAt"`
+	UploadUrl string    `json:"uploadUrl"`
+	ObjectKey string    `json:"objectKey"`
+	ExpiresAt time.Time `json:"expiresAt"`
 }
 
 // SessionChunk represents a single session chunk for playback.
@@ -42,14 +42,14 @@ type SessionChunk struct {
 
 // GetSessionChunksResponse represents the response body for listing session chunks.
 type GetSessionChunksResponse struct {
-	SessionID   string        `json:"sessionId"`
+	SessionID   string         `json:"sessionId"`
 	Chunks      []SessionChunk `json:"chunks"`
-	TotalChunks int           `json:"totalChunks"`
+	TotalChunks int            `json:"totalChunks"`
 }
 
 // ChunksHandler handles chunk-related requests.
 type ChunksHandler struct {
-	db       DB
+	db        DB
 	presigner Presigner
 }
 
@@ -119,9 +119,9 @@ func (h *ChunksHandler) CreateChunk(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, CreateChunkResponse{
-		UploadUrl:  uploadUrl,
-		ObjectKey:  objectKey,
-		ExpiresAt:  expiresAt,
+		UploadUrl: uploadUrl,
+		ObjectKey: objectKey,
+		ExpiresAt: expiresAt,
 	})
 }
 

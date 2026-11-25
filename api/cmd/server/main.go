@@ -57,7 +57,7 @@ func main() {
 	r := chi.NewRouter()
 
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:5173"},
+		AllowedOrigins: []string{"http://localhost:5173"},
 		AllowOriginFunc: func(r *http.Request, origin string) bool {
 			return origin == "http://localhost:5173" || (len(origin) >= 17 && origin[:8] == "https://" && origin[len(origin)-10:] == ".github.io")
 		},

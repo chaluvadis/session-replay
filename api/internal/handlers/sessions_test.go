@@ -224,11 +224,11 @@ func TestListSessions_Valid(t *testing.T) {
 	if len(sessions) != 2 {
 		t.Errorf("expected 2 sessions, got %d", len(sessions))
 	}
-pagination := resp["pagination"].(map[string]any)
-count := pagination["count"].(float64)
-if int(count) != 2 {
-    t.Errorf("expected count 2, got %v", pagination["count"])
-}
+	pagination := resp["pagination"].(map[string]any)
+	count := pagination["count"].(float64)
+	if int(count) != 2 {
+		t.Errorf("expected count 2, got %v", pagination["count"])
+	}
 }
 
 func TestCompleteSession_Valid(t *testing.T) {

@@ -35,9 +35,9 @@ type CreateSessionResponse struct {
 
 // CompleteSessionRequest represents the optional body for completing a session.
 type CompleteSessionRequest struct {
-	TotalChunks  *int `json:"totalChunks,omitempty"`
-	TotalEvents  *int `json:"totalEvents,omitempty"`
-	DurationMs   *int `json:"durationMs,omitempty"`
+	TotalChunks *int `json:"totalChunks,omitempty"`
+	TotalEvents *int `json:"totalEvents,omitempty"`
+	DurationMs  *int `json:"durationMs,omitempty"`
 }
 
 // SessionSummary represents a session in list responses.

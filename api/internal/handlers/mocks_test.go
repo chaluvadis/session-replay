@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -260,10 +260,10 @@ func commandTag(rowsAffected int64) pgconn.CommandTag {
 
 // mockPresigner implements the Presigner interface with canned responses.
 type mockPresigner struct {
-	putURL  string
-	putErr  error
-	getURL  string
-	getErr  error
+	putURL string
+	putErr error
+	getURL string
+	getErr error
 }
 
 func (m *mockPresigner) PresignedPutURL(ctx context.Context, objectKey string, expiry time.Duration) (string, error) {

@@ -3,7 +3,8 @@ package models
 // ApiError represents a standardized API error response.
 //
 // All API errors use the format:
-//   { "error": { "code": "...", "message": "..." } }
+//
+//	{ "error": { "code": "...", "message": "..." } }
 type ApiError struct {
 	Error ErrorDetail `json:"error"`
 }
