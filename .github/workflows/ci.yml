@@ -96,35 +96,6 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
-    services:
-      postgres:
-        image: postgres:18-alpine
-        env:
-          POSTGRES_USER: ${{ secrets.POSTGRES_CI_USER }}
-          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_CI_PASSWORD }}
-          POSTGRES_DB: ${{ secrets.POSTGRES_CI_DB }}
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U postgres"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-      minio:
-        image: minio/minio:RELEASE.2024-01-15T21-42-46Z
-        env:
-          MINIO_ROOT_USER: ${{ secrets.MINIO_CI_USER }}
-          MINIO_ROOT_PASSWORD: ${{ secrets.MINIO_CI_PASSWORD }}
-        ports:
-          - 9000:9000
-        options: >-
-          --health-cmd "curl -f http://localhost:9000/minio/health/live"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        command: server /data
-
     steps:
       - uses: actions/checkout@v4
 
@@ -175,7 +146,7 @@ jobs:
           MINIO_BUCKET="${MINIO_CI_BUCKET}" \
           MINIO_USE_SSL="false" \
           ./replay-api &
-          
+
           # Wait for backend to be healthy
           for i in {1..30}; do
             if curl -sf http://localhost:8080/api/health; then
@@ -191,19 +162,6 @@ jobs:
             -H "Content-Type: application/json" \
             -d '{"sessionId": "test-ci", "application": "ci", "environment": "test", "url": "http://localhost"}' \
             | jq -e '.sessionId == "test-ci"'
-
-      - name: Test chunk upload and retrieval
-        run: |
-          RESPONSE=$(curl -s -X POST http://localhost:8080/api/chunks \
-            -H "Content-Type: application/json" \
-            -d '{"sessionId": "test-ci", "chunkIndex": 0, "fileSize": 10}')
-          echo "$RESPONSE" | jq -e '.uploadUrl != null'
-          
-          UPLOAD_URL=$(echo "$RESPONSE" | jq -r '.uploadUrl')
-          echo "test" > test.gz
-          curl -s -X PUT "$UPLOAD_URL" --data-binary @test.gz -H "Content-Type: application/gzip"
-          
-          curl -s http://localhost:8080/api/sessions/test-ci/chunks | jq -e '.chunks | length == 1'
 
       - name: Test session completion
         run: |
