@@ -36,11 +36,6 @@ func main() {
 	}
 	defer postgres.Close()
 
-	// Run migrations.
-	if err := db.Migrate(ctx, postgres.Pool(), "api/migrations/001_initial.sql"); err != nil {
-		log.Fatalf("failed to run migrations: %v", err)
-	}
-
 	// Connect to MinIO (non-fatal — session registration works without it).
 	minioClient, err := storage.New(minIOEndpoint, minIOAccessKey, minIOSecretKey, minIOBucket, false)
 	if err != nil {
