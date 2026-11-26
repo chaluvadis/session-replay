@@ -4,10 +4,16 @@
   <title>DumbPipe - Session Replay</title>
   <meta charset="utf-8">
   <script type="text/javascript">
-    // SPA fallback: redirect all 404s to the app root.
-    // GitHub Pages serves 404.html for unknown paths; this script
-    // sends the user to the session list where they can navigate.
-    window.location.href = "/session-replay/";
+    // SPA fallback for GitHub Pages: preserve the original path in
+    // sessionStorage, then redirect to the app root. The app reads
+    // sessionStorage on load and navigates to the preserved route.
+    (function () {
+      var p = window.location.pathname;
+      if (p && p !== '/' && p.indexOf('.') === -1) {
+        sessionStorage.setItem('spa-redirect', p);
+      }
+      window.location.replace('/session-replay/');
+    })();
   </script>
 </head>
 <body></body>
