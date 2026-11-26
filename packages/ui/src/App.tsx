@@ -6,7 +6,8 @@
  *  - /session/:id -> ReplayPlayer
  */
 
-import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom";
+import { useEffect } from "react";
+import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import SessionList from "./components/SessionList";
 import ReplayPlayer from "./components/ReplayPlayer";
 import RecordPage from "./components/RecordPage";
