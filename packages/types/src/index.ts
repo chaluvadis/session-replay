@@ -6,7 +6,7 @@
  */
 
 export type { SessionStatus } from "./session";
-export type { SessionMetadata } from "./session";
+export type { SessionMetadata, Session } from "./session";
 
 export type {
   CreateSessionRequest,

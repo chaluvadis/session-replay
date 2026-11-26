@@ -12,6 +12,16 @@ export interface DumbPipeSDKOptions {
   environment?: string;
 }
 
+interface StartOptions {
+  sessionId?: string;
+  application?: string;
+  environment?: string;
+  userId?: string;
+  runId?: string;
+  url?: string;
+  metadata?: Record<string, unknown>;
+}
+
 export interface StartResult {
   sessionId: string;
 }
@@ -38,7 +48,7 @@ export class DumbPipeSDK {
     return this.sessionId;
   }
 
-  async start(options?: { sessionId?: string }): Promise<StartResult> {
+  async start(options?: StartOptions): Promise<StartResult> {
     if (this.started) {
       return { sessionId: this.sessionId as string };
     }
@@ -47,8 +57,13 @@ export class DumbPipeSDK {
 
     if (!sessionId) {
       const res = await this.api.createSession({
-        application: "web",
-        environment: "development",
+        sessionId: options?.sessionId,
+        application: options?.application ?? "web",
+        environment: options?.environment ?? "development",
+        userId: options?.userId ?? undefined,
+        runId: options?.runId ?? undefined,
+        url: options?.url ?? typeof location !== "undefined" ? location.href : "",
+        metadata: options?.metadata ?? {},
       });
       sessionId = res.sessionId;
     }
@@ -137,4 +152,4 @@ export class DumbPipeSDK {
   }
 }
 
-export { DumbPipeSDK as default };
+export { DumbPipeSDK as default, type StartOptions };
