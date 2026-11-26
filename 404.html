@@ -4,27 +4,11 @@
   <title>DumbPipe - Session Replay</title>
   <meta charset="utf-8">
   <script type="text/javascript">
-    // Single Page App for GitHub Pages with SPA fallback
-    // This script redirects 404s to index.html while preserving the original path
-    (function(l) {
-      if (l.search) {
-        var q = {};
-        l.search.slice(1).split('&').forEach(function(v) {
-          var a = v.split('=');
-          q[a[0]] = a.slice(1).join('=').replace(/&/g, '');
-        });
-        if (q.p !== l.pathname) {
-          l.href = l.hash ? l.hash : l.pathname + '?p=' + q.p;
-        }
-      } else {
-        var end = l.href.indexOf(l.hash);
-        if (end === -1) end = l.href.length;
-        l.href = l.href.slice(0, end) + '?p=' + l.pathname.slice(1);
-      }
-    })(window.location);
+    // SPA fallback: redirect all 404s to the app root.
+    // GitHub Pages serves 404.html for unknown paths; this script
+    // sends the user to the session list where they can navigate.
+    window.location.href = "/session-replay/";
   </script>
 </head>
-<body>
-  <noscript>Your browser does not support JavaScript!</noscript>
-</body>
+<body></body>
 </html>
