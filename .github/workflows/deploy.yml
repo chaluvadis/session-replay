@@ -16,7 +16,7 @@ concurrency:
 
 env:
   NODE_VERSION: "24"
-  VITE_API_URL: "https://dumbpipe-api.fly.dev"
+  VITE_API_URL: "https://session-replay.fly.dev"
 
 jobs:
   deploy:
