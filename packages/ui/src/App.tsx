@@ -9,6 +9,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import SessionList from "./components/SessionList";
 import ReplayPlayer from "./components/ReplayPlayer";
+import RecordPage from "./components/RecordPage";
 
 export default function App() {
   return (
@@ -17,6 +18,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<SessionList />} />
           <Route path="/session/:id" element={<ReplayPlayer />} />
+          <Route path="/record" element={<RecordPage />} />
         </Routes>
       </div>
     </BrowserRouter>

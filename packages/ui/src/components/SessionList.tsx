@@ -92,9 +92,17 @@ export default function SessionList() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold text-dark-text text-balance">Sessions</h1>
-        <span className="text-xs text-dark-muted px-2 py-1 bg-dark-surface rounded border border-dark-border">
-          {sessions.length} session{sessions.length !== 1 ? "s" : ""}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-dark-muted px-2 py-1 bg-dark-surface rounded border border-dark-border">
+            {sessions.length} session{sessions.length !== 1 ? "s" : ""}
+          </span>
+          <Link
+            to="/record"
+            className="px-4 py-2 bg-dp-500 hover:bg-dp-600 text-white text-xs font-medium rounded-lg transition-colors"
+          >
+            Record Session
+          </Link>
+        </div>
       </div>
 
       <div className="rounded-xl border border-dark-border bg-dark-surface shadow-sm overflow-hidden">

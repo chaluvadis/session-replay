@@ -53,6 +53,10 @@ export class DumbPipeSDK {
       sessionId = res.sessionId;
     }
 
+    if (!sessionId) {
+      throw new Error("Failed to create session");
+    }
+
     this.sessionId = sessionId;
     this.started = true;
 

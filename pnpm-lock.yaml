@@ -231,6 +231,9 @@ importers:
 
   packages/ui:
     dependencies:
+      '@dumb-pipe/sdk':
+        specifier: workspace:*
+        version: link:../sdk
       '@dumb-pipe/types':
         specifier: workspace:*
         version: link:../types

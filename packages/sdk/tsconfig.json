@@ -16,9 +16,7 @@
     "noUnusedParameters": false,
     "jsx": "react-jsx",
     "allowJs": false,
-    "paths": {
-      "@dumb-pipe/types": ["../types/src/index.ts"]
-    }
+    "rootDir": "src"
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
