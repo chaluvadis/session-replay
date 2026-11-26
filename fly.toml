@@ -1,36 +1,38 @@
-# fly.toml
-app = "dumbpipe-api"
-primary_region = "bom"
+# fly.toml app configuration file generated for session-replay on 2026-11-26T16:48:22Z
+#
+# See https://docs.fly.io/reference/configuration for information about how to use this file.
+#
+
+app = 'session-replay'
+primary_region = 'iad'
 
 [build]
-  # If fly.toml is at the ROOT of your repo, use "api/Dockerfile"
-  # If fly.toml is INSIDE the api/ folder, use "Dockerfile"
-  dockerfile = "api/Dockerfile" 
+  dockerfile = 'api/Dockerfile'
 
 [env]
-  PORT = "8080"
-  MINIO_BUCKET = "session-replays"
-  MINIO_REGION = "auto"
+  MINIO_BUCKET = 'session-replays'
+  MINIO_REGION = 'auto'
+  PORT = '8080'
 
 [http_service]
   internal_port = 8080
   force_https = true
-  auto_stop_machines = true
+  auto_stop_machines = 'stop'
   auto_start_machines = true
   min_machines_running = 0
 
   [http_service.concurrency]
-    type = "connections"
+    type = 'connections'
     hard_limit = 25
     soft_limit = 20
 
   [[http_service.checks]]
-    grace_period = "10s"
-    interval = "30s"
-    method = "GET"
-    timeout = "5s"
-    path = "/api/health"
+    interval = '30s'
+    timeout = '5s'
+    grace_period = '10s'
+    method = 'GET'
+    path = '/api/health'
 
 [[vm]]
-  size = "shared-cpu-1x"
-  memory = "256mb"
+  size = 'shared-cpu-1x'
+  memory = '256mb'
