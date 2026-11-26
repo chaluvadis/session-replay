@@ -91,7 +91,9 @@ export class DumbPipeSDK {
       clearInterval(this.flushTimer);
     }
     this.flushTimer = setInterval(() => {
-      void this.flush();
+      void this.flush().catch(() => {
+        // Swallow flush errors from the timer; stop() handles cleanup
+      });
     }, this.flushIntervalMs);
   }
 
@@ -121,7 +123,12 @@ export class DumbPipeSDK {
   }
 
   async stop(): Promise<void> {
-    await this.flush();
+    // Always stop the recorder and clear timers, even if flush/upload fails
+    try {
+      await this.flush();
+    } catch {
+      // Upload failure must not prevent stopping the recorder
+    }
     if (this.flushTimer) {
       clearInterval(this.flushTimer);
       this.flushTimer = null;
@@ -136,7 +143,11 @@ export class DumbPipeSDK {
   async complete(): Promise<void> {
     await this.stop();
     if (!this.sessionId) return;
-    await this.api.completeSession(this.sessionId);
+    try {
+      await this.api.completeSession(this.sessionId);
+    } catch {
+      // Session completion failure must not prevent stop from completing
+    }
   }
 
   destroy(): void {
