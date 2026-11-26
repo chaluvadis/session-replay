@@ -39,6 +39,7 @@ jobs:
 
       - name: Build UI
         run: |
+          pnpm --filter @dumb-pipe/sdk exec tsc --outDir dist --rootDir src
           cd packages/ui
           VITE_API_URL=${{ env.VITE_API_URL }} pnpm run build
 
