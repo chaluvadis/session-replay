@@ -231,9 +231,6 @@ func (h *SessionsHandler) ListSessions(w http.ResponseWriter, r *http.Request) {
 	application := r.URL.Query().Get("application")
 	environment := r.URL.Query().Get("environment")
 	status := r.URL.Query().Get("status")
-	if status == "" {
-		status = "completed"
-	}
 
 	limit := 50
 	if v := r.URL.Query().Get("limit"); v != "" {
@@ -258,11 +255,16 @@ func (h *SessionsHandler) ListSessions(w http.ResponseWriter, r *http.Request) {
 		       (metadata->>'totalChunks')::int AS total_chunks,
 		       (metadata->>'durationMs')::int AS duration_ms
 		FROM sessions
-		WHERE status = $1
+		WHERE 1 = 1
 	`
-	args := []any{status}
-	argIdx := 2
+	args := []any{}
+	argIdx := 1
 
+	if status != "" && status != "all" {
+		query += fmt.Sprintf(" AND status = $%d", argIdx)
+		args = append(args, status)
+		argIdx++
+	}
 	if application != "" {
 		query += fmt.Sprintf(" AND application = $%d", argIdx)
 		args = append(args, application)
@@ -324,9 +326,14 @@ func (h *SessionsHandler) ListSessions(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get total count for pagination
-	countQuery := `SELECT COUNT(*) FROM sessions WHERE status = $1`
-	countArgs := []any{status}
-	cArgIdx := 2
+	countQuery := `SELECT COUNT(*) FROM sessions WHERE 1 = 1`
+	countArgs := []any{}
+	cArgIdx := 1
+	if status != "" && status != "all" {
+		countQuery += fmt.Sprintf(" AND status = $%d", cArgIdx)
+		countArgs = append(countArgs, status)
+		cArgIdx++
+	}
 	if application != "" {
 		countQuery += fmt.Sprintf(" AND application = $%d", cArgIdx)
 		countArgs = append(countArgs, application)
@@ -335,6 +342,7 @@ func (h *SessionsHandler) ListSessions(w http.ResponseWriter, r *http.Request) {
 	if environment != "" {
 		countQuery += fmt.Sprintf(" AND environment = $%d", cArgIdx)
 		countArgs = append(countArgs, environment)
+		cArgIdx++
 	}
 
 	var count int

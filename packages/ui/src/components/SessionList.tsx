@@ -52,7 +52,7 @@ export default function SessionList() {
 
     try {
       const params: ListSessionsParams = {
-        status: statusFilter || undefined,
+        status: statusFilter && statusFilter !== "all" ? statusFilter : undefined,
         limit: 50,
         offset: 0,
       };
